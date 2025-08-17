@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bugün Ne Yiyelim - Çark Oyunu</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            position: relative;
+        }
+
+        .container {
+            text-align: center;
+            padding: 20px;
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+
+        .language-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50px;
+            padding: 8px 16px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            font-size: 14px;
+        }
+
+        .language-toggle:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.05);
+        }
+
+        .game-area {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 50px;
+            flex-wrap: wrap;
+        }
+
+        .wheel-container {
+            position: relative;
+            display: inline-block;
+            margin: 40px 0;
+        }
+
+        .wheel {
+            width: 400px;
+            height: 400px;
+            border-radius: 50%;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transition: transform 4s cubic-bezier(0.23, 1, 0.32, 1);
+            border: 8px solid white;
+        }
+
+        .segment {
+            position: absolute;
+            width: 50%;
+            height: 50%;
+            transform-origin: right bottom;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            text-align: center;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            padding: 10px;
+        }
+
+        .segment:nth-child(1) { background: #FF6B6B; transform: rotate(0deg) skew(-45deg); }
+        .segment:nth-child(2) { background: #4ECDC4; transform: rotate(30deg) skew(-45deg); }
+        .segment:nth-child(3) { background: #45B7D1; transform: rotate(60deg) skew(-45deg); }
+        .segment:nth-child(4) { background: #96CEB4; transform: rotate(90deg) skew(-45deg); }
+        .segment:nth-child(5) { background: #FFEAA7; transform: rotate(120deg) skew(-45deg); }
+        .segment:nth-child(6) { background: #DDA0DD; transform: rotate(150deg) skew(-45deg); }
+        .segment:nth-child(7) { background: #98D8C8; transform: rotate(180deg) skew(-45deg); }
+        .segment:nth-child(8) { background: #F7DC6F; transform: rotate(210deg) skew(-45deg); }
+        .segment:nth-child(9) { background: #BB8FCE; transform: rotate(240deg) skew(-45deg); }
+        .segment:nth-child(10) { background: #85C1E9; transform: rotate(270deg) skew(-45deg); }
+        .segment:nth-child(11) { background: #F8C471; transform: rotate(300deg) skew(-45deg); }
+        .segment:nth-child(12) { background: #82E0AA; transform: rotate(330deg) skew(-45deg); }
+
+        .segment span {
+            transform: skew(45deg) rotate(22.5deg);
+            display: block;
+            max-width: 80px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .segment.selected span {
+            opacity: 1;
+        }
+
+        .pointer {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 30px solid #FF4757;
+            z-index: 10;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+        }
+
+        .center-circle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            z-index: 5;
+        }
+
+        .center-circle:hover {
+            transform: translate(-50%, -50%) scale(1.1);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .spin-button {
+            background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 30px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .spin-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .spin-button:active {
+            transform: translateY(0);
+        }
+
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .result.show {
+            opacity: 1;
+        }
+
+        .food-display {
+            width: 300px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            margin-top: 40px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.6s ease;
+        }
+
+        .food-display.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .food-image {
+            width: 100%;
+            height: 200px;
+            border-radius: 15px;
+            object-fit: cover;
+            margin-bottom: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .food-image.loading {
+            background: rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+        }
+
+        .food-name {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .food-description {
+            font-size: 1rem;
+            opacity: 0.9;
+            line-height: 1.5;
+        }
+
+        .spinning {
+            pointer-events: none;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-10px);
+            }
+            60% {
+                transform: translateY(-5px);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .game-area {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .food-display {
+                width: 100%;
+                max-width: 400px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .wheel {
+                width: 300px;
+                height: 300px;
+            }
+            
+            .segment {
+                font-size: 12px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .segment span {
+                max-width: 60px;
+            }
+
+            .language-toggle {
+                top: 10px;
+                right: 10px;
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="language-toggle" onclick="toggleLanguage()">🌐 TR</button>
+    
+    <div class="container">
+        <h1 id="title">🍽️ Bugün Ne Yiyelim?</h1>
+        <p class="subtitle" id="subtitle">Çark öğle yemeği kaderinize karar versin!</p>
+        
+        <div class="game-area">
+            <div class="wheel-container">
+                <div class="pointer"></div>
+                <div class="wheel" id="wheel">
+                    <div class="segment"><span id="food-0">Kebap</span></div>
+                    <div class="segment"><span id="food-1">Lahmacun</span></div>
+                    <div class="segment"><span id="food-2">Pide</span></div>
+                    <div class="segment"><span id="food-3">Döner</span></div>
+                    <div class="segment"><span id="food-4">Mantı</span></div>
+                    <div class="segment"><span id="food-5">İçli Köfte</span></div>
+                    <div class="segment"><span id="food-6">Çiğ Köfte</span></div>
+                    <div class="segment"><span id="food-7">Kumpir</span></div>
+                    <div class="segment"><span id="food-8">Balık Ekmek</span></div>
+                    <div class="segment"><span id="food-9">Köfte</span></div>
+                    <div class="segment"><span id="food-10">Adana Kebap</span></div>
+                    <div class="segment"><span id="food-11">Urfa Kebap</span></div>
+                </div>
+                <div class="center-circle" onclick="spinWheel()">🎯</div>
+            </div>
+            
+            <div class="food-display" id="food-display">
+                <img class="food-image" id="food-image" src="" alt="Food Image">
+                <div class="food-name" id="food-name"></div>
+                <div class="food-description" id="food-description"></div>
+            </div>
+        </div>
+        
+        <button class="spin-button" id="spin-button" onclick="spinWheel()">Çarkı Çevir!</button>
+        
+        <div class="result" id="result">
+            <span id="result-text">Çarkı veya butona tıklayarak çevirin!</span>
+        </div>
+    </div>
+
+    <script>
+        // Dil değişkeni
+        let currentLanguage = 'tr';
+        
+        // Türk yemekleri ve görselleri
+        const foods = [
+            {
+                name: 'Kebap',
+                searchQuery: 'kebab',
+                description: 'Türk mutfağının en meşhur lezzetlerinden biri. Yanında salata ve yoğurt ile servis edilir.'
+            },
+            {
+                name: 'Lahmacun',
+                searchQuery: 'lahmacun',
+                description: 'İnce hamur üzerine kıyma, sebze ve baharatlarla hazırlanan geleneksel Türk lezzeti.'
+            },
+            {
+                name: 'Pide',
+                searchQuery: 'turkish pizza',
+                description: 'Türk pizzası olarak bilinen, çeşitli malzemelerle hazırlanan fırın hamur işi.'
+            },
+            {
+                name: 'Döner',
+                searchQuery: 'doner kebab',
+                description: 'Dikey çevrilen etten dilimlenerek hazırlanan dünya çapında ünlü Türk lezzeti.'
+            },
+            {
+                name: 'Mantı',
+                searchQuery: 'turkish dumplings',
+                description: 'İçine kıyma konulan küçük hamur topları, yoğurt ve salça ile servis edilir.'
+            },
+            {
+                name: 'İçli Köfte',
+                searchQuery: 'kibbeh',
+                description: 'Bulgur harcının içine konulan kıymalı harçtan yapılan kızartma lezzeti.'
+            },
+            {
+                name: 'Çiğ Köfte',
+                searchQuery: 'cig kofte',
+                description: 'Çiğ köftelik bulgur, isot ve baharatlarla hazırlanan geleneksel lezzet.'
+            },
+            {
+                name: 'Kumpir',
+                searchQuery: 'baked potato',
+                description: 'Fırında pişirilmiş patatesin içine peynir ve çeşitli malzemeler konulan sokak lezzeti.'
+            },
+            {
+                name: 'Balık Ekmek',
+                searchQuery: 'fish sandwich',
+                description: 'Izgara balığın ekmeğe konulmasıyla hazırlanan sağlıklı ve lezzetli seçenek.'
+            },
+            {
+                name: 'Köfte',
+                searchQuery: 'turkish meatballs',
+                description: 'Kıymadan yapılan ve ızgara, fırın veya kızartma ile pişirilen Türk lezzeti.'
+            },
+            {
+                name: 'Adana Kebap',
+                searchQuery: 'adana kebab',
+                description: 'Acılı kıymadan yapılan ve şişte pişirilen Güneydoğu Anadolu mutfağı lezzeti.'
+            },
+            {
+                name: 'Urfa Kebap',
+                searchQuery: 'urfa kebab',
+                description: 'Acısız kıymadan yapılan ve şişte pişirilen Güneydoğu Anadolu mutfağı lezzeti.'
+            }
+        ];
+
+        // Unsplash API için istek fonksiyonu
+        async function getFoodImage(query) {
+            try {
+                // Unsplash Source URL formatı - API key gerektirmez
+                const width = 300;
+                const height = 200;
+                const imageUrl = `https://source.unsplash.com/${width}x${height}/?${encodeURIComponent(query)},food,turkish`;
+                
+                // Görseli yükle ve cache'le
+                return new Promise((resolve) => {
+                    const img = new Image();
+                    img.onload = () => resolve(imageUrl);
+                    img.onerror = () => {
+                        // Hata durumunda yedek görsel
+                        resolve(`https://picsum.photos/seed/${query}/${width}/${height}.jpg`);
+                    };
+                    img.src = imageUrl;
+                });
+            } catch (error) {
+                console.error('Görsel yüklenirken hata:', error);
+                return `https://picsum.photos/seed/${query}/300/200.jpg`;
+            }
+        }
+
+        // Çeviriler
+        const translations = {
+            en: {
+                title: "🍽️ What to Eat Today?",
+                subtitle: "Let the wheel decide your lunch destiny!",
+                spinButton: "Spin the Wheel!",
+                initialResult: "Click the wheel or button to spin!",
+                resultText: "🎉 Today you should eat: <strong>{food}</strong>! 🎉"
+            },
+            tr: {
+                title: "🍽️ Bugün Ne Yiyelim?",
+                subtitle: "Çark öğle yemeği kaderinize karar versin!",
+                spinButton: "Çarkı Çevir!",
+                initialResult: "Çarkı veya butona tıklayarak çevirin!",
+                resultText: "🎉 Bugün şunu yemelisin: <strong>{food}</strong>! 🎉"
+            }
+        };
+
+        // Dil değiştirme fonksiyonu
+        function toggleLanguage() {
+            currentLanguage = currentLanguage === 'en' ? 'tr' : 'en';
+            updateLanguage();
+            
+            // Buton metnini güncelle
+            const langButton = document.querySelector('.language-toggle');
+            langButton.textContent = currentLanguage === 'en' ? '🌐 TR' : '🌐 EN';
+            
+            // Dil tercihini localStorage'a kaydet
+            localStorage.setItem('preferredLanguage', currentLanguage);
+        }
+
+        // Dil güncelleme fonksiyonu
+        function updateLanguage() {
+            const lang = translations[currentLanguage];
+            
+            // Başlık ve alt başlık güncelle
+            document.getElementById('title').textContent = lang.title;
+            document.getElementById('subtitle').textContent = lang.subtitle;
+            
+            // Buton metnini güncelle
+            document.getElementById('spin-button').textContent = lang.spinButton;
+            
+            // Sonuç metnini güncelle
+            const resultElement = document.getElementById('result-text');
+            if (resultElement.innerHTML.includes('Today you should eat') || 
+                resultElement.innerHTML.includes('Bugün şunu yemelisin')) {
+                // Eğer sonuç gösteriliyorsa, mevcut sonucu güncelleme
+            } else {
+                resultElement.textContent = lang.initialResult;
+            }
+        }
+
+        // Sayfa yüklendiğinde dil tercihini kontrol et
+        window.addEventListener('DOMContentLoaded', function() {
+            const savedLanguage = localStorage.getItem('preferredLanguage');
+            if (savedLanguage) {
+                currentLanguage = savedLanguage;
+                const langButton = document.querySelector('.language-toggle');
+                langButton.textContent = currentLanguage === 'en' ? '🌐 TR' : '🌐 EN';
+                updateLanguage();
+            }
+        });
+
+        let isSpinning = false;
+        let currentRotation = 0;
+
+        async function spinWheel() {
+            if (isSpinning) return;
+            
+            isSpinning = true;
+            const wheel = document.getElementById('wheel');
+            const result = document.getElementById('result');
+            const resultText = document.getElementById('result-text');
+            const foodDisplay = document.getElementById('food-display');
+            const foodImage = document.getElementById('food-image');
+            
+            // Hide result and food display during spin
+            result.classList.remove('show');
+            foodDisplay.classList.remove('show');
+            
+            // Remove previous selection
+            document.querySelectorAll('.segment').forEach(segment => {
+                segment.classList.remove('selected');
+            });
+            
+            // Add spinning class for visual feedback
+            wheel.classList.add('spinning');
+            
+            // Calculate random spin (multiple full rotations + random segment)
+            const spins = Math.floor(Math.random() * 5) + 5; // 5-10 full rotations
+            const segmentAngle = 360 / foods.length;
+            const randomSegment = Math.floor(Math.random() * foods.length);
+            const finalAngle = (spins * 360) + (randomSegment * segmentAngle);
+            
+            // Apply rotation
+            currentRotation += finalAngle;
+            wheel.style.transform = `rotate(${currentRotation}deg)`;
+            
+            // Show result after animation
+            setTimeout(async () => {
+                const selectedFood = foods[randomSegment];
+                const lang = translations[currentLanguage];
+                resultText.innerHTML = lang.resultText.replace('{food}', selectedFood.name);
+                result.classList.add('show');
+                
+                // Show selected food on wheel
+                const selectedSegment = document.querySelectorAll('.segment')[randomSegment];
+                selectedSegment.classList.add('selected');
+                
+                // Show loading state for image
+                foodImage.classList.add('loading');
+                foodImage.src = '';
+                foodImage.alt = 'Loading...';
+                foodDisplay.classList.add('show');
+                
+                // Fetch food image
+                try {
+                    const imageUrl = await getFoodImage(selectedFood.searchQuery);
+                    foodImage.classList.remove('loading');
+                    foodImage.src = imageUrl;
+                    foodImage.alt = selectedFood.name;
+                } catch (error) {
+                    console.error('Görsel yüklenemedi:', error);
+                    foodImage.classList.remove('loading');
+                    foodImage.src = `https://picsum.photos/seed/${selectedFood.name}/300/200.jpg`;
+                }
+                
+                // Update food info
+                document.getElementById('food-name').textContent = selectedFood.name;
+                document.getElementById('food-description').textContent = selectedFood.description;
+                
+                // Remove spinning class
+                wheel.classList.remove('spinning');
+                isSpinning = false;
+                
+                // Add some celebration effect
+                celebrate();
+            }, 4000);
+        }
+
+        function celebrate() {
+            // Simple celebration effect
+            const result = document.getElementById('result');
+            result.style.animation = 'bounce 0.6s ease-in-out';
+            setTimeout(() => {
+                result.style.animation = '';
+            }, 600);
+        }
+
+        // Initialize result
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('result').classList.add('show');
+        });
+    </script>
+</body>
+</html>
